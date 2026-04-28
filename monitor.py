@@ -26,61 +26,29 @@ def save_seen(seen):
 def fetch_channel(channel_url):
     print(f"  Getting video list: {channel_url}")
     
-    # step 1 — get list of video IDs
+    for i, vid_id in enumerate(video_ids, 1):
+    vid_url = f"https://www.youtube.com/watch?v={vid_id}"
     cmd = [
         "yt-dlp",
-        "--flat-playlist",
-        "--print", "id",
+        "--write-comments",
+        "--skip-download",
         "--no-warnings",
-        "--quiet",
-        channel_url
+        "-J",
+        vid_url
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        video_ids = [l.strip() for l in result.stdout.splitlines() if l.strip()]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        data = json.loads(result.stdout)
+        comments = data.get("comments", []) or []
+        print(f"  video {vid_id}: returncode={result.returncode} comments={len(comments)}")
+        print(f"  stderr: {result.stderr[:200]}")
+        # only test first 2 videos
+        if i >= 2:
+            break
     except Exception as e:
-        print(f"  [error] getting video list: {e}")
-        return []
-
-    print(f"  Found {len(video_ids)} videos. Fetching comments...")
-
-    entries = []
-
-    # step 2 — fetch each video individually
-    for vid_id in video_ids:
-        vid_url = f"https://www.youtube.com/watch?v={vid_id}"
-        cmd = [
-            "yt-dlp",
-            "--write-comments",
-            "--skip-download",
-            "--no-warnings",
-            "--quiet",
-            "-J",
-            vid_url
-        ]
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            if result.returncode != 0:
-                continue
-            data = json.loads(result.stdout)
-        except Exception as e:
-            print(f"  [error] video {vid_id}: {e}")
-            continue
-
-        vid_title = data.get("title", "Unknown")
-
-        for c in data.get("comments", []) or []:
-            entries.append({
-                "video_id":    vid_id,
-                "video_title": vid_title,
-                "video_url":   vid_url,
-                "comment_id":  c.get("id", ""),
-                "author":      c.get("author", "Unknown"),
-                "text":        c.get("text", ""),
-                "timestamp":   c.get("timestamp", 0),
-            })
-
-        print(f"  {vid_title[:50]} — {len(data.get('comments', []) or [])} comments")
+        print(f"  [error] {e}")
+        break
+return []
 
     return entries
 
