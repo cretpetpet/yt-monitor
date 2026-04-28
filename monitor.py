@@ -24,25 +24,9 @@ def save_seen(seen):
 
 # ── fetch comments via yt-dlp ─────────────────────────────────────────────────
 def fetch_channel(channel_url):
-    print(f"  Getting video list: {channel_url}")
+    print(f"  DEBUG: skipping video list, testing 2 hardcoded videos")
     
-    cmd = [
-        "yt-dlp",
-        "--flat-playlist",
-        "--print", "id",
-        "--no-warnings",
-        "--quiet",
-        channel_url
-    ]
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        video_ids = [l.strip() for l in result.stdout.splitlines() if l.strip()]
-    except Exception as e:
-        print(f"  [error] getting video list: {e}")
-        return []
-
-    print(f"  Found {len(video_ids)} videos. Fetching comments...")
-
+    video_ids = ["EvsVVOk7gFg", "Fx5wWHSYNwE"]  # from your earlier test
     entries = []
 
     for i, vid_id in enumerate(video_ids, 1):
@@ -52,23 +36,20 @@ def fetch_channel(channel_url):
             "--write-comments",
             "--skip-download",
             "--no-warnings",
-            "--quiet",
             "-J",
             vid_url
         ]
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            if result.returncode != 0:
-                continue
             data = json.loads(result.stdout)
+            comments = data.get("comments", []) or []
+            print(f"  [{i}/2] returncode={result.returncode} comments={len(comments)}")
+            print(f"  stderr: {result.stderr[:300]}")
         except Exception as e:
-            print(f"  [error] video {vid_id}: {e}")
+            print(f"  [error] {e}")
             continue
 
         vid_title = data.get("title", "Unknown")
-        comments = data.get("comments", []) or []
-        print(f"  [{i}/{len(video_ids)}] {vid_title[:50]} — {len(comments)} comments")
-
         for c in comments:
             entries.append({
                 "video_id":    vid_id,
