@@ -1,0 +1,30 @@
+name: YT Comment Monitor
+
+on:
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install yt-dlp
+        run: pip install yt-dlp
+
+      - name: Run monitor script
+        run: python monitor.py
+
+      - name: Commit results back to repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add results.html seen.json
+          git commit -m "monitor run $(date +'%Y-%m-%d %H:%M')" || echo "nothing to commit"
+          git push
