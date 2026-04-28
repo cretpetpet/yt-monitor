@@ -358,7 +358,7 @@ def build_html(video_blocks, new_count, total_count, channel_count):
 def main():   
     if not os.path.exists(CHANNELS):
         print("[error] channels.txt not found. Add one YouTube channel URL per line.")
-        input("Press Enter to exit...")
+      #  input("Press Enter to exit...")
         sys.exit(1)
 
     with open(CHANNELS, "r", encoding="utf-8") as f:
@@ -366,7 +366,7 @@ def main():
 
     if not channels:
         print("[error] channels.txt is empty.")
-        input("Press Enter to exit...")
+       # input("Press Enter to exit...")
         sys.exit(1)
 
     first_run = not os.path.exists(SEEN_FILE)
